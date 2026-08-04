@@ -1,0 +1,71 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* Paleta única (sem toggle claro/escuro na v1) — deliberadamente escura e com
+   laranja como cor primária, invertendo a ênfase do consumidor-gov (que usa azul
+   como primária e laranja como acento) para o portal ter identidade visual
+   própria mesmo partindo da mesma paleta de marca real:
+   Azul Energisa #009FC2, Laranja Energisa #F37021 (mesmos hex documentados em
+   consumidor-gov/src/styles.css). Contraste de texto verificado (WCAG AA) usando
+   o azul-marinho escuro como cor de texto sobre laranja/azul, em vez de branco. */
+:root {
+  --radius: 0.75rem;
+  --background: #0a2436;
+  --foreground: #f5f7fa;
+  --card: #11314a;
+  --card-foreground: #f5f7fa;
+  --popover: #11314a;
+  --popover-foreground: #f5f7fa;
+  /* Laranja Energisa #F37021 — cor primária do portal (CTAs, botão "novo link") */
+  --primary: #f37021;
+  --primary-foreground: #0a2436;
+  /* Azul Energisa #009FC2 — acento secundário (ícones, detalhes, hover) */
+  --secondary: #009fc2;
+  --secondary-foreground: #0a2436;
+  --muted: #1b415c;
+  --muted-foreground: #9fb0c7;
+  --accent: #164060;
+  --accent-foreground: #f5f7fa;
+  --destructive: #dc2626;
+  --destructive-foreground: #f5f7fa;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #f37021;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-tap-highlight-color: transparent;
+  }
+  input, textarea, select { font-size: 16px; } /* previne zoom automático no iOS */
+}
