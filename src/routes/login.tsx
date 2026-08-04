@@ -21,7 +21,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const loginFn = useServerFn(login);
-  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await loginFn({ data: { email, senha } });
+      await loginFn({ data: { login: usuario, senha } });
       navigate({ to: "/admin" });
     } catch (err: any) {
       toast.error(err.message ?? "E-mail ou senha inválidos.");
@@ -46,11 +46,11 @@ function LoginPage() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>E-mail</Label>
+              <Label>Usuário</Label>
               <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
                 required
                 autoFocus
               />

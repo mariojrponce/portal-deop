@@ -104,7 +104,7 @@ export const listAdmins = createServerFn({ method: "GET" })
   .handler(async () => {
     const { db } = await import("@/lib/db.server");
     return db
-      .query("SELECT id, email, nome, created_at FROM admins ORDER BY created_at ASC")
+      .query("SELECT id, login, nome, created_at FROM admins ORDER BY created_at ASC")
       .all() as Omit<AdminRow, "password_hash">[];
   });
 
@@ -113,7 +113,13 @@ export const createAdmin = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
       .object({
-        email: z.string().trim().toLowerCase().email(),
+        login: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .min(3)
+          .max(50)
+          .regex(/^[a-z0-9._-]+$/, "Use apenas letras, números, ponto, hífen ou underline."),
         nome: z.string().trim().min(1).max(200),
         senha: z.string().min(8).max(200),
       })
@@ -121,12 +127,12 @@ export const createAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { db } = await import("@/lib/db.server");
-    const existing = db.query("SELECT id FROM admins WHERE email = ?").get(data.email);
-    if (existing) throw new Error("Já existe um admin com esse e-mail.");
+    const existing = db.query("SELECT id FROM admins WHERE login = ?").get(data.login);
+    if (existing) throw new Error("Já existe um admin com esse login.");
 
     const password_hash = await hashPassword(data.senha);
-    db.query("INSERT INTO admins (email, nome, password_hash) VALUES (?, ?, ?)").run(
-      data.email,
+    db.query("INSERT INTO admins (login, nome, password_hash) VALUES (?, ?, ?)").run(
+      data.login,
       data.nome,
       password_hash,
     );

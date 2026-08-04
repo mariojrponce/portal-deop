@@ -13,7 +13,7 @@ db.exec("PRAGMA foreign_keys = ON;");
 db.exec(`
   CREATE TABLE IF NOT EXISTS admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
+    login TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     nome TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -32,9 +32,20 @@ db.exec(`
   );
 `);
 
+// Migração leve: bancos criados antes da troca de login por e-mail para
+// login por usuário simples tinham a coluna "email" em vez de "login".
+{
+  const cols = db.query("PRAGMA table_info(admins)").all() as { name: string }[];
+  const hasEmail = cols.some((c) => c.name === "email");
+  const hasLogin = cols.some((c) => c.name === "login");
+  if (hasEmail && !hasLogin) {
+    db.exec("ALTER TABLE admins RENAME COLUMN email TO login;");
+  }
+}
+
 export type AdminRow = {
   id: number;
-  email: string;
+  login: string;
   password_hash: string;
   nome: string;
   created_at: string;

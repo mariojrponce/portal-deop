@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { getSessionAdmin, logout } from "@/lib/auth.functions";
+import { getSessionAdmin, logout, changeMyPassword } from "@/lib/auth.functions";
 import {
   listLinks,
   listAdmins,
@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Pencil, Trash2, ArrowUp, ArrowDown, LogOut, UserPlus } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ArrowUp, ArrowDown, LogOut, UserPlus, KeyRound } from "lucide-react";
 
 type LinkRow = {
   id: number;
@@ -60,6 +60,7 @@ function AdminPage() {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [editing, setEditing] = useState<LinkRow | null>(null);
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const refresh = () => router.invalidate();
@@ -100,9 +101,24 @@ function AdminPage() {
           <h1 className="text-xl font-bold">Painel administrativo</h1>
           <p className="text-sm text-muted-foreground">Logado como {admin.nome}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={onLogout}>
-          <LogOut className="h-4 w-4" /> Sair
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <KeyRound className="h-4 w-4" /> Trocar minha senha
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Trocar minha senha</DialogTitle>
+              </DialogHeader>
+              <ChangePasswordForm onDone={() => setPasswordDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="sm" onClick={onLogout}>
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
@@ -214,13 +230,13 @@ function AdminPage() {
             </Dialog>
           </CardHeader>
           <CardContent className="space-y-2">
-            {admins.map((a: { id: number; email: string; nome: string }) => (
+            {admins.map((a: { id: number; login: string; nome: string }) => (
               <div
                 key={a.id}
                 className="rounded-lg border border-border bg-background/40 p-3 text-sm"
               >
                 <span className="font-medium">{a.nome}</span>{" "}
-                <span className="text-muted-foreground">— {a.email}</span>
+                <span className="text-muted-foreground">— {a.login}</span>
               </div>
             ))}
           </CardContent>
@@ -296,7 +312,7 @@ function LinkForm({
 
 function AdminForm({ onDone }: { onDone: () => void | Promise<void> }) {
   const createFn = useServerFn(createAdmin);
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [nome, setNome] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
@@ -305,9 +321,9 @@ function AdminForm({ onDone }: { onDone: () => void | Promise<void> }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await createFn({ data: { email, nome, senha } });
+      await createFn({ data: { login, nome, senha } });
       toast.success("Administrador criado.");
-      setEmail("");
+      setLogin("");
       setNome("");
       setSenha("");
       await onDone();
@@ -324,8 +340,8 @@ function AdminForm({ onDone }: { onDone: () => void | Promise<void> }) {
         <Input value={nome} onChange={(e) => setNome(e.target.value)} required />
       </div>
       <div className="space-y-1.5">
-        <Label>E-mail*</Label>
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Label>Login* (letras, números, ponto, hífen ou underline)</Label>
+        <Input value={login} onChange={(e) => setLogin(e.target.value)} required />
       </div>
       <div className="space-y-1.5">
         <Label>Senha* (mínimo 8 caracteres)</Label>
@@ -339,6 +355,56 @@ function AdminForm({ onDone }: { onDone: () => void | Promise<void> }) {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="h-4 w-4 animate-spin" />} Criar administrador
+      </Button>
+    </form>
+  );
+}
+
+function ChangePasswordForm({ onDone }: { onDone: () => void | Promise<void> }) {
+  const changeFn = useServerFn(changeMyPassword);
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [senhaNova, setSenhaNova] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await changeFn({ data: { senhaAtual, senhaNova } });
+      toast.success("Senha alterada.");
+      setSenhaAtual("");
+      setSenhaNova("");
+      await onDone();
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro ao trocar senha.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-3">
+      <div className="space-y-1.5">
+        <Label>Senha atual*</Label>
+        <Input
+          type="password"
+          value={senhaAtual}
+          onChange={(e) => setSenhaAtual(e.target.value)}
+          required
+          autoFocus
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Nova senha* (mínimo 8 caracteres)</Label>
+        <Input
+          type="password"
+          value={senhaNova}
+          onChange={(e) => setSenhaNova(e.target.value)}
+          minLength={8}
+          required
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />} Trocar senha
       </Button>
     </form>
   );
