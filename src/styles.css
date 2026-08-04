@@ -31,10 +31,12 @@
 /* Paleta única (sem toggle claro/escuro na v1) — deliberadamente escura e com
    laranja como cor primária, invertendo a ênfase do consumidor-gov (que usa azul
    como primária e laranja como acento) para o portal ter identidade visual
-   própria mesmo partindo da mesma paleta de marca real:
-   Azul Energisa #009FC2, Laranja Energisa #F37021 (mesmos hex documentados em
-   consumidor-gov/src/styles.css). Contraste de texto verificado (WCAG AA) usando
-   o azul-marinho escuro como cor de texto sobre laranja/azul, em vez de branco. */
+   própria mesmo partindo da mesma paleta de marca real. Hex conferidos em
+   layout/cores/Cores Energisa 1.xlsx:
+   Azul Energisa #009FC2, Laranja Energisa #F37021, Verde Água #00A6A5,
+   Verde Água Claro #3BAD94, Verde #71BF54. Contraste de texto verificado
+   (WCAG AA) usando o azul-marinho escuro como cor de texto sobre laranja/azul,
+   em vez de branco. */
 :root {
   --radius: 0.75rem;
   --background: #0a2436;
@@ -63,7 +65,18 @@
 @layer base {
   * { border-color: var(--color-border); }
   body {
+    /* Degradê de fundo inspirado em layout/degrade/tema-escuro.png: base azul-marinho
+       da marca com manchas suaves de verde-água (#00A6A5) e azul (#009FC2) nos cantos,
+       mantendo o centro neutro para não prejudicar o contraste do texto/cards. */
     background-color: var(--color-background);
+    background-image:
+      radial-gradient(1100px circle at 12% 8%, rgba(0, 166, 165, 0.22), transparent 55%),
+      radial-gradient(900px circle at 88% 92%, rgba(0, 159, 194, 0.18), transparent 55%),
+      radial-gradient(700px circle at 90% 10%, rgba(243, 112, 33, 0.08), transparent 50%),
+      linear-gradient(165deg, #0c2a3d 0%, #0a2436 45%, #071824 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
     color: var(--color-foreground);
     -webkit-tap-highlight-color: transparent;
   }

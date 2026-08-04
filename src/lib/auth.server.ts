@@ -1,4 +1,4 @@
-import { createMiddleware } from "@tanstack/react-start";
+import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
 
 type SessionData = { adminId: number };
 
@@ -25,27 +25,30 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return Bun.password.verify(password, hash);
 }
 
-// As funções abaixo importam "@tanstack/react-start/server" dinamicamente (em vez
-// de no topo do arquivo) de propósito: esse módulo é bloqueado pelo
-// import-protection do TanStack Start se for alcançável estaticamente pelo bundle
-// do cliente. Import dinâmico dentro do corpo da função cria um chunk separado que
-// esse check não percorre — mesmo padrão usado em db.server.ts para o bun:sqlite.
+// As funções abaixo usam createServerOnlyFn porque requireAdminAuth (que depende
+// delas) precisa ser importável estaticamente por módulos client-reachable (é
+// passado como valor em `.middleware([requireAdminAuth])` na definição de server
+// functions) — então o arquivo inteiro entra no grafo estático do cliente. Sem
+// createServerOnlyFn, o import de "@tanstack/react-start/server" abaixo seria
+// alcançável pelo bundle do cliente e barrado pelo import-protection do
+// TanStack Start; com createServerOnlyFn, o compilador remove a implementação
+// do bundle do cliente (e lança erro se for chamada por engano no cliente).
 
-export async function createAdminSession(adminId: number): Promise<void> {
+export const createAdminSession = createServerOnlyFn(async (adminId: number): Promise<void> => {
   const { updateSession } = await import("@tanstack/react-start/server");
   await updateSession<SessionData>(sessionConfig(), { adminId });
-}
+});
 
-export async function destroyAdminSession(): Promise<void> {
+export const destroyAdminSession = createServerOnlyFn(async (): Promise<void> => {
   const { clearSession } = await import("@tanstack/react-start/server");
   await clearSession(sessionConfig());
-}
+});
 
-export async function getCurrentAdminId(): Promise<number | null> {
+export const getCurrentAdminId = createServerOnlyFn(async (): Promise<number | null> => {
   const { getSession } = await import("@tanstack/react-start/server");
   const session = await getSession<SessionData>(sessionConfig());
   return session.data.adminId ?? null;
-}
+});
 
 /** Middleware pra server functions que exigem admin logado. */
 export const requireAdminAuth = createMiddleware({ type: "function" }).server(
